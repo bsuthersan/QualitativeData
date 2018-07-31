@@ -4,14 +4,13 @@ library(tidyverse)
 library(SnowballC)
 library(ggthemes)
 library(wordcloud2)
+library(topicmodels)
 
 data <- VCorpus(DirSource("Obama data"))
 
 ##Build the filterwords
 
 filterwords <- c("ca","d0","d5","d3","d2","applause", "ve")
-
-##Part 1: Build the wordcloud
 
 ##Process the data
 
@@ -99,15 +98,42 @@ nrc <- get_sentiments("nrc")
   mutate(Percent = Total/sum(Total)*100) %>%
   ggplot(aes(sentiment, Percent, fill=Year)) +
   geom_col(show.legend = FALSE) +
-  facet_wrap(~Year, scales = "free_y") +
+  facet_wrap(~Year, ncol = 4, scales = "free_y") +
   coord_flip()
   
+##Part three: topic modelling
 
+##Create the data as a DocumentTermMatrix
+##But clean first
 
+data <- VCorpus(DirSource("Obama data"))
+ 
+newdata <- tidy(data) %>%
+  mutate(Year = gsub(".txt","", id)) %>%
+  unnest_tokens(word,text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!(word %in% filterwords)) %>%
+  count(Year, word) %>%
+  cast_dtm(Year, word, n)
 
+new <- LDA(newdata, k=3, control = list(seed=1234))
 
+newagain <- tidy(new, matrix="beta")
 
+ap_top_terms <- newagain %>%
+  group_by(topic) %>%
+  top_n(15, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
 
+ap_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+
+##Get the most relevant by year
 
 
 
