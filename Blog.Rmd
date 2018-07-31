@@ -1,0 +1,99 @@
+---
+title: "Qual data blog"
+output: html_notebook
+---
+
+```{r, echo=FALSE, message=FALSE}
+library(tm)
+library(tidytext)
+library(tidyverse)
+library(SnowballC)
+library(ggthemes)
+library(wordcloud2)
+library(topicmodels)
+```
+
+#Introduction
+
+Examples of the types of qualitative information that charities and not-for-profits might collect includes notes from their clients, service user feedback, or information about funders, amongst other examples. However, many charities may not necessarily be making the most of qualitative information, as, for many organisations, qualitative data can be more time-consuming than quantiative data to enter, verify, and analyse. Large-scale qualitative information furthermore tends to demand specials
+
+This post looks at three approaches that NFPs can adopt to quickly analyse and draw insights from the qualitative data that they may possess, by leverging some data science tools and approaches.
+
+#Approach one: Word frequency
+
+The first and most basic approach is to look at the frequency breakdown of certain words in a given qualitative dataset. This is a simple approach which involves counting the frequency by which words occur. For example, below is a wordcloud of the 50 most frequent words used by Barack Obama in all of his State of the Union addresses (2010 - 2016). 
+
+```{r, echo=FALSE}
+data <- VCorpus(DirSource("Obama data"))
+
+##Build the filterwords
+
+filterwords <- c("ca","d0","d5","d3","d2","applause", "ve")
+
+##Process the data
+
+wordclouddata <- tidy(data) %>%
+  mutate(Year = gsub(".txt","", id)) %>%
+  unnest_tokens(word,text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!(word %in% filterwords)) %>%
+  mutate(word = case_when(
+    word=="americans" ~ "american",
+    word=="jobs" ~ "job",
+    word=="businesses" ~ "business",
+    TRUE ~ word
+  )) %>%
+  count(word, sort = TRUE)
+
+##Build the wordcloud
+colorVec = rep(c("#28201C","#D9A638","#159A92","#9A2027"), length.out = nrow(new))
+wordcloud2(wordclouddata, minSize=25, color= colorVec, shape = "circle", fontFamily = "sans")
+```
+
+The wordcloud allows us to quickly compare which words are most prevalant across President Obama's speeches by looking at the relative size of each of these words. In this case, the wordcloud shows us that Obama has mentioned 'America', 'job', and 'people' a lot in his SOTU addresses (as these are the biggest words) and has been less likely to use words like 'college', 'reform' and 'united' (the smallest words).
+
+You can choose to get more sophistocated with word frequency approaches. For example, becuase the data is organised by year, we can also check the prevalence of particular words across different years. Below is a graph of the 10 most frequent words in Obama's STOU addresses, organised by year of the address.
+
+```{r, echo=FALSE, dpi=600, warning=FALSE, message=FALSE}
+obamayears <- tidy(data) %>%
+  mutate(Year = gsub(".txt","", id)) %>%
+  unnest_tokens(word,text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!(word %in% filterwords)) %>%
+  mutate(word = case_when(
+    word=="americans" ~ "american",
+    word=="jobs" ~ "job",
+    word=="businesses" ~ "business",
+    TRUE ~ word
+  )) %>%
+  count(word, Year, sort=TRUE) %>%
+  group_by(Year) %>%
+  top_n(20) %>%
+  ungroup()
+
+##Plot
+
+ggplot(obamayears, aes(x = reorder(word, n), y= n, fill=Year)) +
+  geom_col(show.legend=FALSE) +
+  facet_wrap(~Year, scales = "free_y") +
+  coord_flip() +
+  xlab("") +
+  ylab("")
+```
+
+Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the STOTU) can facilitate a quick compare and contrast. In particular, it can allow you to map changes in word frequencies over time. In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
+
+In summation, a word frequency approach. Examples of ways that charities could use word frequencies include:
+
+- See if there is any difference in the frequency of words used by different kinds of service users (e.g. long-term versus short-term users, or male and female service users) to describe their experiences;
+- See if there is 
+
+
+
+
+
+
+
+
+
+
