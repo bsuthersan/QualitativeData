@@ -83,10 +83,17 @@ ggplot(obamayears, aes(x = reorder(word, n), y= n, fill=Year)) +
 
 Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the STOTU) can facilitate a quick compare and contrast.  In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
 
-In summation, a word frequency approach. Examples of ways that charities could use word frequencies include:
+In summation, a word frequency approach. Examples of ways that charities could use word frequency analyses include:
 
 - See if there is any difference in the frequency of words used by different kinds of service users (e.g. long-term versus short-term users, or male and female service users) to describe their experiences;
-- See if there is 
+- Compare and contrast the  (for example, over time, or at different geographic locations).
+
+#Approach two: Sentiment analysis
+
+Another approach to qualitative analysis is sentiment analysis. A sentiment analysis looks at the emotional meaning of words, by classifing each word into a sentiment category. For example, the word 'encourage' might be coded as 'positive' in sentiment, whilst the word 'scream' would probably be coded as 'negative'. There are a number of different sentiment dictionaries which approach this in different ways. 
+
+For this example, I've scraped a small ammount of comment data from Reddit, from a popular subreddit /r/politics. This is a popular subreddit which discusses a number of political topics. 
+
 
 
 
