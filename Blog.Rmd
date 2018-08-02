@@ -50,9 +50,9 @@ colorVec = rep(c("#28201C","#D9A638","#159A92","#9A2027"), length.out = nrow(new
 wordcloud2(wordclouddata, minSize=25, color= colorVec, shape = "circle", fontFamily = "sans")
 ```
 
-The wordcloud allows us to quickly compare which words are most prevalant across President Obama's speeches by looking at the relative size of each of these words. In this case, the wordcloud shows us that Obama has mentioned 'America', 'job', and 'people' a lot in his SOTU addresses (as these are the biggest words) and has been less likely to use words like 'college', 'reform' and 'united' (the smallest words).
+The wordcloud allows us to quickly compare which words are most prevalant across a section of qualitative data by looking at the relative size of each of these words. In this case, the wordcloud shows us that Obama has mentioned 'America', 'job', and 'people' a lot in his SOTU addresses (as these are the biggest words) and has been less likely to use words like 'college', 'reform' and 'united' (the smallest words).
 
-You can choose to get more sophistocated with word frequency approaches. For example, becuase the data is organised by year, we can also check the prevalence of particular words across different years. Below is a graph of the 10 most frequent words in Obama's STOU addresses, organised by year of the address.
+You can choose to get more sophistocated with word frequency approaches. In this case, becuase the data is organised by year, we can also graph the prevalence of particular words across different years, to see if any changes have occured. 
 
 ```{r, echo=FALSE, dpi=600, warning=FALSE, message=FALSE}
 obamayears <- tidy(data) %>%
@@ -81,7 +81,7 @@ ggplot(obamayears, aes(x = reorder(word, n), y= n, fill=Year)) +
   ylab("")
 ```
 
-Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the STOTU) can facilitate a quick compare and contrast. In particular, it can allow you to map changes in word frequencies over time. In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
+Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the STOTU) can facilitate a quick compare and contrast.  In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
 
 In summation, a word frequency approach. Examples of ways that charities could use word frequencies include:
 
