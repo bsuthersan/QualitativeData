@@ -11,6 +11,7 @@ library(SnowballC)
 library(ggthemes)
 library(wordcloud2)
 library(topicmodels)
+library(knitr)
 ```
 
 #Introduction
@@ -90,9 +91,76 @@ In summation, a word frequency approach. Examples of ways that charities could u
 
 #Approach two: Sentiment analysis
 
-Another approach to qualitative analysis is sentiment analysis. A sentiment analysis looks at the emotional meaning of words, by classifing each word into a sentiment category. For example, the word 'encourage' might be coded as 'positive' in sentiment, whilst the word 'scream' would probably be coded as 'negative'. There are a number of different sentiment dictionaries which approach this in different ways. 
+Another approach to qualitative analysis is sentiment analysis. A sentiment analysis looks at the emotional meaning of words, by classifing each word into a pre-defined sentiment category. For example, the word 'encourage' might be coded as 'positive' in sentiment, whilst the word 'scream' would probably be coded as 'negative'. 
 
-For this example, I've scraped a small ammount of comment data from Reddit, from a popular subreddit /r/politics. This is a popular subreddit which discusses a number of political topics. 
+There are different approaches to classifying sentiments. Some dictionaries score words from positive to negative. Others take a binary approach, classifying words into particular sentiments, or simply as 'positive' or 'negative'. For this example, I'm going to make use of the `nrc` dictionary from the `R tidytext` package, which classifies individual words into one of 10 different categories, e.g. 'angry', 'fear', 'joy', 'trust', and 'sadness'.  
+
+```{r, echo=FALSE, warnings= FALSE, message = FALSE}
+politics <- read_csv("https://raw.githubusercontent.com/bsuthersan/QualitativeData/master/Politics/politics.csv")
+
+#Remove the mod
+
+politics <- politics %>%
+  filter(!str_detect(comment, "As a reminder, this subreddit"))
+```
+
+For this example, I've scraped a small amount of comment data from Reddit, from the subreddit /r/politics. This is a popular subreddit which discusses a number of political topics. The data comes from topics discussed on the 1st and 2nd of August 2018, and comprises a total of `r length(politics$title)` comments on `r n_distinct(politics$title)` different topics, from `r n_distinct(politics$user)` different Reddit users (or 'Redditors').
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+politicsdata <- politics %>%
+  select(title, post_date, comment) %>%
+  unnest_tokens(word, comment) %>%
+  anti_join(stop_words, by = "word") %>%
+  left_join(nrc, by = "word") %>%
+  filter(!is.na(sentiment))
+```
+
+First, let's graph the prevalence of different sentiments across all of the comments in /r/politics.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, dpi=600}
+##Basic sentiment analysis
+
+positive = c("positive", "trust","joy")
+neutral = c('surprise','anticipation')
+
+politicsdata %>%
+group_by(sentiment) %>%
+  summarise(Total = n()) %>%
+  mutate(Percent = Total/sum(Total)*100) %>%
+  ggplot(aes(reorder(sentiment,Percent), Percent)) +
+  geom_col(fill="steelblue") +
+  coord_flip() +
+  xlab("") + 
+  ylab("Percent of words") +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+```
+
+Above, we can see that the most prevalent sentiments associated with words were 'positive', 'negative' and 'trust' respectively. Interestingly, however, nearly 1 in 5 topics were associated with anger and fear sentiments.  
+
+Again, like a word frequency analysis, you can choose to get more sophistocated with a sentiment analysis. For example, using a separate dictionary 'afinn', which scores words on a continum from positive (+5) to negative (-5), we can determine which 10 posts are associated with the most negaitve sentiments, by looking at the average scores of all the words in associated comments. (Note that to avoid skewing, I've only included posts with 100 distinc words or more.)
+
+```{r, echo=FALSE}
+afinn <- get_sentiments("afinn")
+politicsdata %>%
+  select(-sentiment) %>%
+  left_join(afinn, by = "word") %>%
+  filter(!is.na(score)) %>%
+  group_by(title) %>%
+  summarise(SentimentScore = round(mean(score),1),
+            DistinctWords = n_distinct(word)) %>%
+  filter(DistinctWords > 100) %>%
+  select(-DistinctWords) %>%
+  arrange(SentimentScore) %>%
+  top_n(-10) %>%
+  kable()
+```
+
+Many of these topics do indeed appear to be quite negative. 
+
+A sentiment analysis builds on a word frequency analysis; it helps us to determine which tools we could use to 
+
+- You could use a sentiment analysis to quickly identify which comments or sentences in a given document are more positive or negative.
 
 
 
