@@ -82,7 +82,7 @@ ggplot(obamayears, aes(x = reorder(word, n), y= n, fill=Year)) +
   ylab("")
 ```
 
-Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the STOTU) can facilitate a quick compare and contrast.  In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
+Splitting word frequencies by the unit you're interested in (in the case of this example, the year of the SOTU address) can facilitate a quick compare and contrast.  In this case we can see that Obama and his speech writers have stuck to a relatively small group of words - indeed, only 21 different words make the top 10 between 2010-2016. Consistency is key!
 
 In summation, a word frequency approach. Examples of ways that charities could use word frequency analyses include:
 
@@ -91,7 +91,7 @@ In summation, a word frequency approach. Examples of ways that charities could u
 
 #Approach two: Sentiment analysis
 
-Another approach to qualitative analysis is sentiment analysis. A sentiment analysis looks at the emotional meaning of words, by classifing each word into a pre-defined sentiment category. For example, the word 'encourage' might be coded as 'positive' in sentiment, whilst the word 'scream' would probably be coded as 'negative'. 
+Another approach to qualitative analysis is sentiment analysis. A sentiment analysis looks at the emotional meaning of words, by classifing each word into a pre-defined sentiment category. For example, the word 'encourage' might be coded as 'positive' in sentiment, whilst the word 'condescend' would probably be coded as 'negative'. 
 
 There are different approaches to classifying sentiments. Some dictionaries score words from positive to negative. Others take a binary approach, classifying words into particular sentiments, or simply as 'positive' or 'negative'. For this example, I'm going to make use of the `nrc` dictionary from the `R tidytext` package, which classifies individual words into one of 10 different categories, e.g. 'angry', 'fear', 'joy', 'trust', and 'sadness'.  
 
@@ -156,11 +156,64 @@ politicsdata %>%
   kable()
 ```
 
-Many of these topics do indeed appear to be quite negative. 
+Many of these topics do indeed appear to be quite negative in tone. 
 
-A sentiment analysis builds on a word frequency analysis; it helps us to determine which tools we could use to 
+A sentiment analysis builds on a word frequency analysis; it helps us to determine which the emotions and sentinments in words.
 
-- You could use a sentiment analysis to quickly identify which comments or sentences in a given document are more positive or negative.
+- You could use a sentiment analysis to quickly identify which comments or sentences in a given document are more positive or negative in tone. This could be useful, if, for example, you are looking to quickly identify a positive or negative quote for a report;
+- You can use sentinment analyses to pick up differences between different locations, individuals, etc.
+
+##Topic modelling
+
+Topic modelling is a techinque commonly used in machine learning and natural langauge processing. Basically, through topic modelling you can attempt to 'discover' the different topics or themes that are prevalent in your textual data. You can determine the topics by looking at the words that are associated with each topic.
+
+There are a number of different algorithms used for topic modelling. One of the most popular algorithms is the Latent Dirichlet allocation (LDA), which treats each 
+
+Keeping with our politics theme, for this example I have accessed the tweets of Donald Trump, using the [trumptwitterarchive]("http://www.trumptwitterarchive.com/"), which, as the same suggests, is an online archive of all of Donald Trump's tweets from his handle `@realDonaldTrump`. To reduce the data, I've just pulled all tweets from the last three years.
+
+
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+##Pull the data, and turn into document term matrix
+url <- 'http://www.trumptwitterarchive.com/data/realdonaldtrump/%s.json'
+removewords <- c("realdonaldtrump","trump","https", "t.co","donald", "amp","http", "rt")
+trump_tweets <- map(2017:2018, ~sprintf(url, .x)) %>%
+  map_df(jsonlite::fromJSON, simplifyDataFrame = TRUE) %>%
+  select(text, created_at) %>%
+  unnest_tokens(word,text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(!(word %in% removewords)) %>%
+  group_by(word, created_at) %>%
+  summarise(total = n())
+trumpdtm <- cast_dtm(trump_tweets, created_at, word, total)
+```
+
+Once the data has been collected, we can apply the LDA algorithm to it.
+
+```{r, echo=FALSE}
+trump_topics <- LDA(trumpdtm, k = 2, control = list(seed = 1234))
+trump_topics_lda <- tidy(trump_topics)
+ trump_topics_lda %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  mutate(term = reorder(term, beta),
+         topic  = as.factor(topic)) %>%
+  ggplot(aes(term, beta, fill=topic)) +
+   geom_bar(stat='identity', labs=FALSE) +
+   guides(fill=FALSE) +
+   facet_wrap(~topic, scales='free') +
+   theme_minimal() +
+   coord_flip() +
+   xlab("")
+```
+
+
+
+
+
+
+
+
 
 
 
